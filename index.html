@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mudavadi Girls Finest Group — Ledger System</title>
+    <style>
+        :root {
+            --primary: #0F4C81;
+            --primary-light: #2A75B3;
+            --primary-pale: #E2EBF8;
+            --bg: #F4F7FC;
+            --surface: #FFFFFF;
+            --text: #1E293B;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --admin-bg: #FFFBEB;
+            --admin-border: #FDE68A;
+            --admin-text: #92400E;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); line-height: 1.5; }
+
+        /* ── NAV ── */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(15,76,129,.06);
+        }
+        .nav-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .brand { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
+        .auth-wrap { display: flex; align-items: center; gap: 8px; background: #F1F5F9; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
+        .auth-wrap input { padding: 5px 9px; border: 1px solid var(--border); border-radius: 4px; width: 130px; font-size: .85rem; outline: none; }
+        .auth-wrap button { background: var(--primary); color: #fff; border: none; padding: 5px 11px; border-radius: 4px; font-weight: 700; font-size: .82rem; cursor: pointer; }
+        #authLabel { font-size: .85rem; font-weight: 700; color: #475569; white-space: nowrap; }
+        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+        .nav-tabs button { background: none; border: 1px solid transparent; color: var(--muted); font-size: .88rem; font-weight: 600; cursor: pointer; padding: 7px 13px; border-radius: 6px; transition: all .18s; }
+        .nav-tabs button.active { background: var(--primary-pale); color: var(--primary); border-color: #CBD5E1; }
+
+        /* ── PAGES ── */
+        .page { display: none; max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+        .page.active { display: block; }
+
+        /* ── HERO ── */
+        .hero { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; border-radius: 14px; padding: 44px 36px; text-align: center; box-shadow: 0 10px 28px rgba(15,76,129,.15); margin-bottom: 28px; }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+        .hero p { opacity: .9; max-width: 580px; margin: 0 auto 18px; }
+        .hero .hero-btn { background: #fff; color: var(--primary); border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: .95rem; }
+        .vision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
+        .vision-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+        .vision-card h3 { color: var(--primary); font-size: 1.15rem; margin-bottom: 8px; }
+        .vision-card p { color: var(--muted); font-size: .9rem; }
+
+        /* ── CARD ── */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; box-shadow: 0 3px 6px rgba(0,0,0,.02); margin-bottom: 22px; }
+        .card-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--bg); }
+
+        /* ── DASHBOARD GRID ── */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+        .dash-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; text-align: center; cursor: pointer; transition: transform .18s, box-shadow .18s; }
+        .dash-tile:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(15,76,129,.1); }
+        .dash-tile h3 { color: var(--primary); margin-bottom: 6px; font-size: 1.05rem; }
+        .dash-tile p { color: var(--muted); font-size: .85rem; }
+
+        /* ── ADMIN PANEL ── */
+        .admin-panel { background: var(--admin-bg); border: 1px solid var(--admin-border); padding: 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
+        .admin-panel h4 { color: var(--admin-text); text-transform: uppercase; font-size: .88rem; margin-bottom: 10px; }
+        .admin-fields { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .admin-fields input, .admin-fields select { padding: 8px 11px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: .88rem; outline: none; }
+        .admin-fields input:focus, .admin-fields select:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(42,117,179,.15); }
+
+        /* ── PAGINATION ── */
+        .pager { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 11px 18px; border-radius: 8px; margin-bottom: 14px; border: 1px solid var(--border); }
+        .pager-title { font-weight: 700; color: var(--primary); font-size: 1rem; }
+        .pager-btn { background: var(--primary-light); color: #fff; border: none; padding: 7px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: .85rem; }
+        .pager-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+        /* ── TABLE ── */
+        .tbl-wrap { width: 100%; overflow-x: auto; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        th { background: var(--primary); color: #fff; padding: 11px 14px; font-weight: 600; text-transform: uppercase; font-size: .73rem; letter-spacing: .04em; text-align: left; }
+        td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:nth-child(even) td { background: #F8FAFC; }
+        tr:last-child td { border-bottom: none; }
+
+        /* ── BADGES ── */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: .8rem; }
+        .badge-v { background: #D1FAE5; color: #065F46; }
+        .badge-x { background: #FEE2E2; color: #991B1B; }
+        .badge-dash { background: #E2E8F0; color: #475569; }
+
+        /* ── HOST GRID ── */
+        .host-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-top: 4px; }
+        .host-tile { background: var(--surface); padding: 13px 15px; border-radius: 8px; border: 1px solid var(--border); font-weight: 600; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+
+        /* ── BUTTONS ── */
+        .btn { border: none; padding: 7px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: .85rem; transition: opacity .15s; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-purple { background: #8B5CF6; color: #fff; }
+        .btn-sm { padding: 4px 9px; font-size: .78rem; }
+        .export-btn { margin-top: 14px; display: none; }
+
+        /* ── MINUTES ── */
+        .minutes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 14px; }
+        .minute-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+        .minute-card h4 { color: var(--primary); margin-bottom: 4px; }
+        .minute-meta { font-size: .78rem; color: var(--muted); margin-bottom: 10px; }
+        .pdf-link { color: var(--primary-light); text-decoration: underline; font-weight: 700; cursor: pointer; font-size: .88rem; }
+
+        /* ── MODAL ── */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+        .modal-backdrop.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border-radius: 14px; padding: 28px; width: 480px; max-width: calc(100vw - 32px); box-shadow: 0 20px 50px rgba(0,0,0,.18); transform: translateY(16px) scale(.97); transition: transform .22s cubic-bezier(.34,1.56,.64,1); }
+        .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 18px; }
+        .modal-field { margin-bottom: 13px; }
+        .modal-field label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+        .modal-field input, .modal-field select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: .9rem; outline: none; }
+        .modal-field input:focus, .modal-field select:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(42,117,179,.15); }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* ── CONFIRM DIALOG ── */
+        .confirm-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .15s; }
+        .confirm-backdrop.open { opacity: 1; pointer-events: all; }
+        .confirm-box { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 380px; width: calc(100vw - 32px); box-shadow: 0 16px 40px rgba(0,0,0,.2); transform: scale(.95); transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+        .confirm-backdrop.open .confirm-box { transform: scale(1); }
+        .confirm-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+        .confirm-box p { font-size: .88rem; color: var(--muted); margin-bottom: 20px; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* ── TOAST ── */
+        #toast-stack { position: fixed; bottom: 22px; right: 22px; z-index: 900; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { background: #1E293B; color: #fff; padding: 11px 18px; border-radius: 8px; font-size: .88rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,.18); display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success::before { content: '✓'; background: var(--success); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 900; flex-shrink: 0; }
+        .toast.error::before { content: '✕'; background: var(--danger); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 900; flex-shrink: 0; }
+        .toast.info::before { content: 'i'; background: var(--primary-light); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 900; flex-shrink: 0; }
+
+        /* ── GATEWAY ── */
+        .gateway-wrap { max-width: 460px; margin: 0 auto; text-align: center; }
+        .gateway-box { background: #F8FAFC; border: 1px solid var(--border); padding: 28px; border-radius: 10px; }
+        .gateway-box input { padding: 11px; width: 80%; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 14px; display: block; margin-left: auto; margin-right: auto; font-size: 1rem; outline: none; text-align: center; }
+        .gateway-box input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(42,117,179,.15); }
+        .gateway-success { color: var(--success); font-weight: 700; padding: 12px; display: none; }
+
+        /* ── SAVE INDICATOR ── */
+        .save-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-left: 6px; }
+        .unsaved-dot { background: var(--warning); animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── LOADING OVERLAY ── */
+        #loadingOverlay { position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px; }
+        .spinner { width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .75s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        #loadingOverlay p { color:var(--muted);font-size:.9rem;font-weight:600; }
+
+        @media (max-width: 600px) {
+            .nav-tabs button { padding: 6px 10px; font-size: .8rem; }
+            .hero h1 { font-size: 1.6rem; }
+            .admin-fields { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading ledger data…</p>
+</div>
+
+<!-- TOAST STACK -->
+<div id="toast-stack"></div>
+
+<!-- EDIT MODAL -->
+<div class="modal-backdrop" id="editModal">
+    <div class="modal">
+        <div class="modal-title" id="editModalTitle">Edit Record</div>
+        <div id="editModalBody"></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="editModalCancel" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-success" id="editModalSave" onclick="commitEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-backdrop" id="confirmDialog">
+    <div class="confirm-box">
+        <h3 id="confirmTitle">Confirm Action</h3>
+        <p id="confirmMsg">Are you sure?</p>
+        <div class="confirm-actions">
+            <button class="btn" onclick="confirmResolve(false)" style="background:var(--border);color:var(--text)">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmResolve(true)">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-top">
+        <div class="brand">💎 Mudavadi Girls Finest Group</div>
+        <div class="auth-wrap">
+            <span id="authLabel">Viewer Mode</span>
+            <input type="password" id="adminKey" placeholder="Admin passkey" id="adminKeyInput">
+            <button id="authBtn" onclick="doLogin()">Login</button>
+        </div>
+    </div>
+    <div class="nav-tabs" id="navTabs">
+        <button class="active" onclick="gotoPage('p1',this)">Home</button>
+        <button onclick="gotoPage('p2',this)">Gateway</button>
+        <button onclick="gotoPage('p3',this)">Dashboard</button>
+        <button onclick="gotoPage('p4',this)">Savings</button>
+        <button onclick="gotoPage('p5',this)">Fines</button>
+        <button onclick="gotoPage('p6',this)">Contributions</button>
+        <button onclick="gotoPage('p7',this)">Host Schedules</button>
+        <button onclick="gotoPage('p8',this)">Attendance</button>
+        <button onclick="gotoPage('p9',this)">Meeting Minutes</button>
+    </div>
+</nav>
+
+<!-- PAGE 1: HOME -->
+<div id="p1" class="page active">
+    <div class="hero">
+        <h1>Togetherness & Empowerment</h1>
+        <p>The financial and operations platform for Mudavadi Girls Finest Group — track savings, contributions, fines, host schedules, and meeting records.</p>
+        <button class="hero-btn" onclick="gotoPage('p3', document.querySelectorAll('.nav-tabs button')[2])">Enter Dashboard</button>
+    </div>
+    <div class="vision-grid">
+        <div class="vision-card">
+            <h3>Our Vision</h3>
+            <p>Fostering sustainable financial growth, social accountability, and shared progress through mutual trust and cooperation.</p>
+        </div>
+        <div class="vision-card">
+            <h3>Financial Clarity</h3>
+            <p>Precision tracking of savings balances, contribution history, fine registries, and rotation capitals — all in one place.</p>
+        </div>
+        <div class="vision-card">
+            <h3>Member Records</h3>
+            <p>Attendance logs, host assignments, and meeting minutes kept securely and accessible to all members at a glance.</p>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: GATEWAY -->
+<div id="p2" class="page">
+    <div class="card gateway-wrap">
+        <div class="card-title">System Access Gateway</div>
+        <p style="color:var(--muted);margin-bottom:20px;">Enter your admin passkey to enable edit and entry rights across all ledger pages.</p>
+        <div class="gateway-box" id="gatewayBox">
+            <input type="password" id="p2pass" placeholder="Enter passkey" onkeydown="if(event.key==='Enter')doPage2Login()">
+            <button class="btn btn-success" style="width:80%" onclick="doPage2Login()">Verify Identity</button>
+        </div>
+        <div class="gateway-success" id="gatewaySuccess">✓ Administrator access granted.</div>
+    </div>
+</div>
+
+<!-- PAGE 3: DASHBOARD -->
+<div id="p3" class="page">
+    <div class="card">
+        <div class="card-title">Management Console</div>
+        <div class="admin-panel" id="calendarPanel">
+            <h4>📅 Add New Month / Year</h4>
+            <div class="admin-fields">
+                <select id="newMonth">
+                    <option value="jan">January</option><option value="feb">February</option>
+                    <option value="mar">March</option><option value="apr">April</option>
+                    <option value="may">May</option><option value="jun">June</option>
+                    <option value="jul">July</option><option value="aug">August</option>
+                    <option value="sep">September</option><option value="oct">October</option>
+                    <option value="nov">November</option><option value="dec">December</option>
+                </select>
+                <input type="number" id="newYear" value="2026" style="width:110px" placeholder="Year">
+                <button class="btn btn-success" onclick="addTimeline()">Add Timeline Frame</button>
+            </div>
+        </div>
+        <div class="dash-grid">
+            <div class="dash-tile" onclick="gotoPage('p4',document.querySelectorAll('.nav-tabs button')[3])"><h3>🏦 Savings</h3><p>Monthly savings &amp; cumulative balances</p></div>
+            <div class="dash-tile" onclick="gotoPage('p5',document.querySelectorAll('.nav-tabs button')[4])"><h3>⚠️ Fines</h3><p>Infraction records &amp; outstanding arrears</p></div>
+            <div class="dash-tile" onclick="gotoPage('p6',document.querySelectorAll('.nav-tabs button')[5])"><h3>🔄 Contributions</h3><p>Monthly merry-go-round entries</p></div>
+            <div class="dash-tile" onclick="gotoPage('p7',document.querySelectorAll('.nav-tabs button')[6])"><h3>📅 Host Schedules</h3><p>Monthly hosting assignments</p></div>
+            <div class="dash-tile" onclick="gotoPage('p8',document.querySelectorAll('.nav-tabs button')[7])"><h3>👥 Attendance</h3><p>Member presence &amp; exemptions</p></div>
+            <div class="dash-tile" onclick="gotoPage('p9',document.querySelectorAll('.nav-tabs button')[8])"><h3>📄 Meeting Minutes</h3><p>PDF records &amp; archived proceedings</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 4: SAVINGS -->
+<div id="p4" class="page">
+    <div class="card">
+        <div class="pager">
+            <button class="pager-btn" onclick="navMonth('savings',-1)">← Back</button>
+            <span class="pager-title" id="savingsTitle">Loading…</span>
+            <button class="pager-btn" onclick="navMonth('savings',1)">Next →</button>
+        </div>
+        <div class="admin-panel" id="savingsAdminPanel">
+            <h4>Add / Update Savings Entry</h4>
+            <div class="admin-fields">
+                <input type="text" id="savName" placeholder="Member full name">
+                <input type="number" id="savAmt" placeholder="This month (KES)">
+                <input type="number" id="savTotal" placeholder="Cumulative override (optional)">
+                <button class="btn btn-success" onclick="addRecord('savings')">Save Entry</button>
+            </div>
+        </div>
+        <div id="savingsContainer"></div>
+        <button class="btn btn-purple export-btn" id="expSavings" onclick="exportTable('savingsContainer','Savings_Balances')">⬇ Download Table</button>
+    </div>
+</div>
+
+<!-- PAGE 5: FINES -->
+<div id="p5" class="page">
+    <div class="card">
+        <div class="pager">
+            <button class="pager-btn" onclick="navMonth('fines',-1)">← Back</button>
+            <span class="pager-title" id="finesTitle">Loading…</span>
+            <button class="pager-btn" onclick="navMonth('fines',1)">Next →</button>
+        </div>
+        <div class="admin-panel" id="finesAdminPanel">
+            <h4>Impose / Adjust Fine</h4>
+            <div class="admin-fields">
+                <input type="text" id="fineName" placeholder="Member full name">
+                <input type="number" id="fineAmt" placeholder="Fine this month (KES)">
+                <input type="number" id="fineDebt" placeholder="Outstanding total (KES)">
+                <button class="btn btn-success" onclick="addRecord('fines')">Apply Fine</button>
+            </div>
+        </div>
+        <div id="finesContainer"></div>
+        <button class="btn btn-purple export-btn" id="expFines" onclick="exportTable('finesContainer','Fines_Registry')">⬇ Download Table</button>
+    </div>
+</div>
+
+<!-- PAGE 6: CONTRIBUTIONS -->
+<div id="p6" class="page">
+    <div class="card">
+        <div class="pager">
+            <button class="pager-btn" onclick="navMonth('contrib',-1)">← Back</button>
+            <span class="pager-title" id="contribTitle">Loading…</span>
+            <button class="pager-btn" onclick="navMonth('contrib',1)">Next →</button>
+        </div>
+        <div class="admin-panel" id="contribAdminPanel">
+            <h4>Add / Modify Contribution</h4>
+            <div class="admin-fields">
+                <input type="text" id="ctbName" placeholder="Member full name">
+                <input type="text" id="ctbAmt" placeholder="Amount (e.g. 2,000)">
+                <button class="btn btn-success" onclick="addRecord('contrib')">Save Entry</button>
+            </div>
+        </div>
+        <div id="contribContainer"></div>
+        <button class="btn btn-purple export-btn" id="expContrib" onclick="exportTable('contribContainer','Contributions_Ledger')">⬇ Download Table</button>
+    </div>
+</div>
+
+<!-- PAGE 7: HOSTS -->
+<div id="p7" class="page">
+    <div class="card">
+        <div class="pager">
+            <button class="pager-btn" onclick="navMonth('host',-1)">← Back</button>
+            <span class="pager-title" id="hostTitle">Loading…</span>
+            <button class="pager-btn" onclick="navMonth('host',1)">Next →</button>
+        </div>
+        <div class="admin-panel" id="hostAdminPanel">
+            <h4>Assign Host</h4>
+            <div class="admin-fields">
+                <input type="text" id="hostName" placeholder="Member full name">
+                <button class="btn btn-success" onclick="addHost()">Add Host</button>
+            </div>
+        </div>
+        <div id="hostContainer"></div>
+        <button class="btn btn-purple export-btn" id="expHost" onclick="exportTable('hostContainer','Host_Schedules')">⬇ Download Table</button>
+    </div>
+</div>
+
+<!-- PAGE 8: ATTENDANCE -->
+<div id="p8" class="page">
+    <div class="card">
+        <div class="pager">
+            <button class="pager-btn" onclick="navMonth('attendance',-1)">← Back</button>
+            <span class="pager-title" id="attendanceTitle">Loading…</span>
+            <button class="pager-btn" onclick="navMonth('attendance',1)">Next →</button>
+        </div>
+        <div class="admin-panel" id="attendanceAdminPanel">
+            <h4>Set Attendance Status</h4>
+            <div class="admin-fields">
+                <input type="text" id="attName" placeholder="Member full name">
+                <select id="attStatus">
+                    <option value="V">Present (V)</option>
+                    <option value="X">Absent (X)</option>
+                    <option value="-">Exempt (−)</option>
+                </select>
+                <button class="btn btn-success" onclick="addRecord('attendance')">Save Entry</button>
+            </div>
+        </div>
+        <div id="attendanceContainer"></div>
+        <button class="btn btn-purple export-btn" id="expAttendance" onclick="exportTable('attendanceContainer','Attendance_Registry')">⬇ Download Table</button>
+    </div>
+</div>
+
+<!-- PAGE 9: MINUTES -->
+<div id="p9" class="page">
+    <div class="card">
+        <div class="card-title">📄 Meeting Minutes Registry</div>
+        <p style="color:var(--muted);margin-bottom:16px;">Upload, archive, and retrieve official meeting proceedings in PDF format.</p>
+        <div class="admin-panel" id="minutesAdminPanel">
+            <h4>Add Minutes Record</h4>
+            <div class="admin-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <input type="text" id="minTitle" placeholder="Meeting title">
+                <input type="date" id="minDate">
+                <input type="text" id="minFilename" placeholder="File name (e.g. April_Minutes.pdf)" style="grid-column:span 2">
+                <input type="url" id="minUrl" placeholder="Public PDF URL (e.g. https://drive.google.com/...)" style="grid-column:span 2">
+                <button class="btn btn-success" style="grid-column:span 2;justify-self:start" onclick="uploadMinutes()">Publish Minutes</button>
+            </div>
+            <p style="font-size:.78rem;color:var(--muted);margin-top:8px">Tip: upload your PDF to Google Drive, set sharing to <strong>Anyone with the link → Viewer</strong>, then paste the link above.</p>
+        </div>
+        <div class="minutes-grid" id="minutesContainer"></div>
+    </div>
+</div>
+
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ═══════════════════════════════════════════
+//  FIREBASE CONFIG  (free Firestore — shared across all devices)
+// ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDxxR9bgKqq6ab_vITowfkrWg7WNVGVcEo",
+  authDomain: "finest-mudavo.firebaseapp.com",
+  projectId: "finest-mudavo",
+  storageBucket: "finest-mudavo.firebasestorage.app",
+  messagingSenderId: "893986070284",
+  appId: "1:893986070284:web:3f099d4ac19866ef73b329",
+  measurementId: "G-MSNDLJXMJN"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const STORE = "mgfg_data"; // single Firestore document holds all ledger state
+
+// ═══════════════════════════════════════════
+//  STATE & DEFAULTS
+// ═══════════════════════════════════════════
+const SECRET = "MUDAVADI_ADMIN2026";
+let isAdmin = false;
+let _firestoreReady = false;
+
+const DEFAULT_MONTHS = ["apr","may","jun","jul","aug","sep","oct","nov","dec","jan","feb","mar"];
+const DEFAULT_LABELS = {
+    apr:"April 2025",may:"May 2025",jun:"June 2025",jul:"July 2025",aug:"August 2025",
+    sep:"September 2025",oct:"October 2025",nov:"November 2025",dec:"December 2025",
+    jan:"January 2026",feb:"February 2026",mar:"March 2026"
+};
+
+// ── Local cache (in-memory, synced from Firestore) ──
+let months, labels, cursors, hostSchedule, attendance, fines, savings, contrib, minutes;
+
+// ═══════════════════════════════════════════
+//  FIRESTORE HELPERS
+// ═══════════════════════════════════════════
+const DOCREF = doc(db, STORE, "ledger");
+
+async function cloudSave(key, val) {
+    try {
+        await setDoc(DOCREF, { [key]: JSON.stringify(val) }, { merge: true });
+    } catch(e) {
+        // Fallback to localStorage if offline
+        try { localStorage.setItem('mgfg_'+key, JSON.stringify(val)); } catch(_){}
+    }
+}
+
+function save(key, val) {
+    // Update local cache immediately
+    switch(key){
+        case 'months': months = val; break;
+        case 'labels': labels = val; break;
+        case 'cursors': cursors = val; break;
+        case 'hosts': hostSchedule = val; break;
+        case 'attendance': attendance = val; break;
+        case 'fines': fines = val; break;
+        case 'savings': savings = val; break;
+        case 'contrib': contrib = val; break;
+        case 'minutes': minutes = val; break;
+    }
+    // Also save to localStorage as offline backup
+    try { localStorage.setItem('mgfg_'+key, JSON.stringify(val)); } catch(_){}
+    // Push to Firestore (cloud)
+    cloudSave(key, val);
+}
+
+function loadLocal(key, fallback) {
+    try {
+        const v = localStorage.getItem('mgfg_'+key);
+        return v !== null ? JSON.parse(v) : fallback;
+    } catch(e) { return fallback; }
+}
+
+// ═══════════════════════════════════════════
+//  INITIALISE DATA FROM FIRESTORE
+//  then set up real-time listener so all viewers
+//  see admin changes without refreshing
+// ═══════════════════════════════════════════
+async function initData() {
+    // Show loading
+    document.getElementById('loadingOverlay').style.display = 'flex';
+
+    // Hard-coded defaults (used when no cloud data exists yet)
+    const DEFAULT_HOSTS = {
+        apr:["1. MILLICENT BULINDA","2. ABBY ASILA","3. EVELYNE NDEJE","4. FLORENCE INYAGWA"],
+        may:["5. CAROLINE MUSAVI","6. LAVERA OMWANGALE","7. NOEL ANYOSO","8. DIANA KATENYA"],
+        jun:["9. HARRIET AYEKHA","10. MILDRED MUKOLWE","11. SUSAN MUGA","12. RACHEL MISOGA"],
+        jul:["13. ROSELINE ADIEDO","14. BERVERLY OCHAMI","15. JACKLINE MAHAGWA","16. WINNIE SALAMBA"],
+        aug:["17. SHAMI FADHIL","18. REBECCA SERUYA","19. JEMIMA OMUKUBA","20. MILDRED NJENGO"],
+        sep:["21. LYDIA BUSENA","22. JUDY MAKULU","23. RUTH ANYIENDA","24. SALOME NANGA"],
+        oct:[],nov:[],dec:[],jan:[],feb:[],mar:[]
+    };
+
+    const DEFAULT_ATTENDANCE = [
+        {name:"DARVINE KATENYA",apr:"X",may:"X",jun:"V",jul:"V",aug:"X",sep:"X",oct:"V",nov:"X",dec:"X",jan:"V",feb:"V",mar:"X"},
+        {name:"ABBY ASILA",apr:"V",may:"V",jun:"V",jul:"V",aug:"X",sep:"X",oct:"V",nov:"-",dec:"X",jan:"X",feb:"-",mar:"-"},
+        {name:"MILLICENT BULINDA",apr:"V",may:"V",jun:"V",jul:"X",aug:"V",sep:"V",oct:"V",nov:"X",dec:"V",jan:"X",feb:"V",mar:"X"},
+        {name:"RUTH AJIAMBO",apr:"-",may:"X",jun:"V",jul:"X",aug:"X",sep:"X",oct:"X",nov:"V",dec:"X",jan:"X",feb:"V",mar:"-"},
+        {name:"LAVERA OMWANGALE",apr:"V",may:"V",jun:"V",jul:"V",aug:"V",sep:"V",oct:"V",nov:"-",dec:"X",jan:"V",feb:"V",mar:"X"},
+        {name:"GRACE JALEHA",apr:"V",may:"X",jun:"V",jul:"X",aug:"V",sep:"V",oct:"V",nov:"X",dec:"X",jan:"X",feb:"V",mar:"X"},
+        {name:"EDITH MIDEVA",apr:"X",may:"V",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"X",feb:"X",mar:"X"},
+        {name:"COLLETA MISIJI",apr:"V",may:"X",jun:"V",jul:"X",aug:"V",sep:"V",oct:"V",nov:"-",dec:"V",jan:"-",feb:"V",mar:"X"},
+        {name:"MILDRED MUKOLWE",apr:"X",may:"V",jun:"V",jul:"X",aug:"V",sep:"V",oct:"X",nov:"X",dec:"V",jan:"V",feb:"X",mar:"V"},
+        {name:"JEMIMA OMUKUBA",apr:"X",may:"X",jun:"V",jul:"V",aug:"X",sep:"V",oct:"X",nov:"X",dec:"V",jan:"V",feb:"X",mar:"X"},
+        {name:"MILDRED NJENGO",apr:"X",may:"V",jun:"V",jul:"X",aug:"X",sep:"V",oct:"X",nov:"V",dec:"X",jan:"V",feb:"X",mar:"V"},
+        {name:"FLORENCE INYAGWA",apr:"V",may:"V",jun:"V",jul:"V",aug:"X",sep:"X",oct:"V",nov:"V",dec:"V",jan:"V",feb:"X",mar:"V"},
+        {name:"NANCY SUSU",apr:"X",may:"V",jun:"V",jul:"X",aug:"V",sep:"V",oct:"X",nov:"X",dec:"X",jan:"X",feb:"-",mar:"X"},
+        {name:"HARRIET AYEKHA",apr:"V",may:"V",jun:"V",jul:"X",aug:"V",sep:"V",oct:"X",nov:"X",dec:"X",jan:"X",feb:"X",mar:"V"},
+        {name:"GRACE BARAZA",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"V",feb:"X",mar:"X"},
+        {name:"SALOME NANGA",apr:"X",may:"X",jun:"X",jul:"V",aug:"X",sep:"V",oct:"X",nov:"X",dec:"X",jan:"X",feb:"X",mar:"X"},
+        {name:"VIOLET MUTEMBA",apr:"X",may:"X",jun:"V",jul:"V",aug:"V",sep:"V",oct:"V",nov:"X",dec:"X",jan:"-",feb:"-",mar:"X"},
+        {name:"ROSELINE ADIEDO",apr:"X",may:"X",jun:"V",jul:"V",aug:"X",sep:"V",oct:"X",nov:"-",dec:"X",jan:"V",feb:"X",mar:"X"},
+        {name:"NOEL ANYOSO",apr:"X",may:"V",jun:"X",jul:"V",aug:"V",sep:"V",oct:"V",nov:"X",dec:"X",jan:"X",feb:"V",mar:"-"},
+        {name:"MBANJA EUWIMBUNKS",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"-",feb:"X",mar:"X"},
+        {name:"JOYCE MAHAGWA",apr:"-",may:"V",jun:"X",jul:"V",aug:"X",sep:"V",oct:"V",nov:"X",dec:"X",jan:"-",feb:"V",mar:"-"},
+        {name:"RUTH ANYIENDA",apr:"X",may:"V",jun:"V",jul:"V",aug:"X",sep:"X",oct:"X",nov:"-",dec:"V",jan:"X",feb:"V",mar:"X"},
+        {name:"LYDIA BUSENA",apr:"V",may:"X",jun:"V",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"X",feb:"X",mar:"X"},
+        {name:"CAROLINE MUSAVI",apr:"V",may:"X",jun:"V",jul:"V",aug:"V",sep:"V",oct:"V",nov:"-",dec:"X",jan:"V",feb:"V",mar:"X"},
+        {name:"RACHEL KADAMBI",apr:"X",may:"X",jun:"V",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"X",feb:"V",mar:"X"},
+        {name:"EVELYNE NDEJE",apr:"V",may:"V",jun:"V",jul:"V",aug:"V",sep:"V",oct:"V",nov:"V",dec:"V",jan:"-",feb:"V",mar:"V"},
+        {name:"CAROLINE KHAMUKA",apr:"X",may:"V",jun:"V",jul:"X",aug:"V",sep:"V",oct:"X",nov:"-",dec:"V",jan:"X",feb:"-",mar:"X"},
+        {name:"JUDY MAKULU",apr:"X",may:"V",jun:"V",jul:"X",aug:"X",sep:"V",oct:"X",nov:"X",dec:"X",jan:"X",feb:"X",mar:"X"},
+        {name:"HARRIET JANANGA",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"-",feb:"X",mar:"X"},
+        {name:"WINNIE SALAMBA",apr:"X",may:"X",jun:"V",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"X",feb:"-",mar:"-"},
+        {name:"JACKLINE MAHAGWA",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"V",nov:"V",dec:"X",jan:"X",feb:"X",mar:"X"},
+        {name:"CAROLINE AVIGOKE",apr:"V",may:"X",jun:"V",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"V",jan:"X",feb:"X",mar:"X"},
+        {name:"BERVERLY OCHAMI",apr:"X",may:"X",jun:"X",jul:"V",aug:"V",sep:"X",oct:"V",nov:"-",dec:"X",jan:"X",feb:"X",mar:"V"},
+        {name:"RACHEL MISOGA",apr:"X",may:"X",jun:"X",jul:"X",aug:"V",sep:"V",oct:"V",nov:"-",dec:"V",jan:"X",feb:"X",mar:"X"},
+        {name:"BEATRICE ASSEMBEKA",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"V",feb:"X",mar:"V"},
+        {name:"BEATRICE ANJILA",apr:"X",may:"V",jun:"V",jul:"X",aug:"X",sep:"V",oct:"X",nov:"X",dec:"X",jan:"-",feb:"X",mar:"X"},
+        {name:"SHAMI FADHIL",apr:"X",may:"V",jun:"X",jul:"X",aug:"X",sep:"V",oct:"X",nov:"X",dec:"V",jan:"V",feb:"V",mar:"X"},
+        {name:"REBECCA SERUYA",apr:"X",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"X",dec:"X",jan:"X",feb:"-",mar:"X"},
+        {name:"SUSAN MUGA",apr:"-",may:"X",jun:"X",jul:"X",aug:"X",sep:"X",oct:"X",nov:"V",dec:"X",jan:"X",feb:"V",mar:"V"},
+        {name:"JOY LIGABO",apr:"-",may:"-",jun:"-",jul:"-",aug:"-",sep:"-",oct:"-",nov:"-",dec:"-",jan:"-",feb:"-",mar:"-"}
+    ];
+
+    const DEFAULT_FINES = [
+        {name:"DARVINE KATENYA",apr:200,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:200},
+        {name:"ABBY ASILA",apr:0,may:0,jun:0,jul:0,aug:200,sep:0,oct:0,nov:0,dec:0,jan:400,feb:0,mar:0,debt:0},
+        {name:"MILLICENT BULINDA",apr:0,may:0,jun:0,jul:200,sep:0,oct:0,nov:200,dec:0,jan:200,feb:0,mar:0,debt:200},
+        {name:"RUTH AJIAMBO",apr:0,may:200,jun:0,jul:200,aug:200,sep:200,oct:200,nov:0,dec:200,jan:200,feb:0,mar:0,debt:0},
+        {name:"LAVERA OMWANGALE",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:400},
+        {name:"GRACE JALEHA",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1200},
+        {name:"EDITH MIDEVA",apr:0,may:0,jun:0,jul:200,aug:200,sep:200,oct:0,nov:0,dec:0,jan:1500,feb:0,mar:0,debt:200},
+        {name:"COLLETA MISIJI",apr:0,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:400},
+        {name:"MILDRED MUKOLWE",apr:0,may:0,jun:0,jul:200,aug:0,sep:0,oct:200,nov:200,dec:0,jan:0,feb:200,mar:0,debt:600},
+        {name:"JEMIMA OMUKUBA",apr:0,may:200,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1000},
+        {name:"MILDRED NJENGO",apr:0,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1000},
+        {name:"FLORENCE INYAGWA",apr:0,may:0,jun:0,jul:0,aug:0,sep:200,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:200},
+        {name:"NANCY SUSU",apr:0,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:200,dec:0,jan:400,feb:0,mar:0,debt:200},
+        {name:"HARRIET AYEKHA",apr:0,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:0,dec:200,jan:0,feb:200,mar:0,debt:600},
+        {name:"GRACE BARAZA",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:2200},
+        {name:"SALOME NANGA",apr:0,may:200,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:2000},
+        {name:"VIOLET MUTEMBA",apr:200,may:200,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:600},
+        {name:"ROSELINE ADIEDO",apr:200,may:200,jun:0,jul:0,aug:0,sep:0,oct:200,nov:0,dec:0,jan:0,feb:200,mar:0,debt:800},
+        {name:"NOEL ANYOSO",apr:200,may:0,jun:200,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:600},
+        {name:"MBANJA EUWIMBUNKS",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:2200},
+        {name:"JOYCE MAHAGWA",apr:0,may:0,jun:200,jul:0,aug:0,sep:0,oct:0,nov:0,dec:200,jan:0,feb:0,mar:0,debt:400},
+        {name:"RUTH ANYIENDA",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:1200},
+        {name:"LYDIA BUSENA",apr:0,may:200,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1800},
+        {name:"CAROLINE MUSAVI",apr:0,may:200,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:200},
+        {name:"RACHEL KADAMBI",apr:0,may:200,jun:0,jul:200,aug:200,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:1200},
+        {name:"EVELYNE NDEJE",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:0},
+        {name:"CAROLINE KHAMUKA",apr:200,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:0,dec:0,jan:200,feb:0,mar:200,debt:0},
+        {name:"JUDY MAKULU",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1800},
+        {name:"HARRIET JANANGA",apr:200,may:200,jun:0,jul:200,aug:200,sep:200,oct:0,nov:0,dec:800,jan:0,feb:200,mar:0,debt:200},
+        {name:"WINNIE SALAMBA",apr:200,may:200,jun:0,jul:200,aug:0,sep:0,oct:200,nov:200,dec:200,jan:200,feb:0,mar:0,debt:400},
+        {name:"JACKLINE MAHAGWA",apr:200,may:200,jun:200,jul:200,aug:200,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1000},
+        {name:"CAROLINE AVIGOKE",apr:0,may:200,jun:0,jul:200,aug:200,sep:200,oct:100,nov:200,dec:0,jan:0,feb:200,mar:0,debt:700},
+        {name:"BERVERLY OCHAMI",apr:0,may:200,jun:200,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:600},
+        {name:"RACHEL MISOGA",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1400},
+        {name:"BEATRICE ASSEMBEKA",apr:0,may:0,jun:200,jul:200,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:200,mar:0,debt:1600},
+        {name:"BEATRICE ANJILA",apr:200,may:0,jun:0,jul:200,aug:0,sep:0,oct:0,nov:0,dec:600,jan:0,feb:200,mar:0,debt:200},
+        {name:"SHAMI FADHIL",apr:0,may:0,jun:0,jul:200,aug:200,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:1400},
+        {name:"REBECCA SERUYA",apr:0,may:0,jun:0,jul:200,aug:200,sep:200,oct:200,nov:200,dec:200,jan:200,feb:0,mar:200,debt:600},
+        {name:"SUSAN MUGA",apr:0,may:200,jun:200,jul:200,aug:200,sep:200,oct:200,nov:0,dec:0,jan:2030,feb:0,mar:0,debt:0},
+        {name:"JOY LIGABO",apr:0,may:0,jun:0,jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,debt:0}
+    ];
+
+    const DEFAULT_SAVINGS = [
+        {name:"DARVINE KATENYA",jul:280,aug:0,sep:0,oct:0,nov:0,dec:0,jan:500,feb:0,mar:0,total:780},
+        {name:"ABBY ASILA",jul:350,aug:0,sep:0,oct:300,nov:0,dec:0,jan:100,feb:0,mar:0,total:750},
+        {name:"MILLICENT BULINDA",jul:280,aug:0,sep:300,oct:0,nov:600,dec:0,jan:0,feb:200,mar:0,total:1380},
+        {name:"RUTH AJIAMBO",jul:380,aug:70,sep:100,oct:100,nov:300,dec:300,jan:300,feb:500,mar:500,total:2550},
+        {name:"LAVERA OMWANGALE",jul:440,aug:0,sep:0,oct:0,nov:900,dec:100,jan:300,feb:0,mar:0,total:1740},
+        {name:"GRACE JALEHA",jul:210,aug:0,sep:70,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:380},
+        {name:"EDITH MIDEVA",jul:350,aug:100,sep:300,oct:0,nov:0,dec:0,jan:500,feb:0,mar:0,total:1250},
+        {name:"COLLETA MISIJI",jul:280,aug:0,sep:0,oct:0,nov:100,dec:0,jan:0,feb:0,mar:0,total:380},
+        {name:"MILDRED MUKOLWE",jul:350,aug:0,sep:0,oct:100,nov:100,dec:0,jan:0,feb:0,mar:0,total:550},
+        {name:"JEMIMA OMUKUBA",jul:280,aug:0,sep:0,oct:100,nov:300,dec:0,jan:0,feb:0,mar:0,total:680},
+        {name:"MILDRED NJENGO",jul:350,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:450},
+        {name:"FLORENCE INYAGWA",jul:380,aug:70,sep:300,oct:100,nov:600,dec:300,jan:300,feb:200,mar:500,total:3050},
+        {name:"NANCY SUSU",jul:280,aug:0,sep:0,oct:0,nov:300,dec:0,jan:0,feb:0,mar:0,total:580},
+        {name:"HARRIET AYEKHA",jul:440,aug:0,sep:0,oct:100,nov:600,dec:0,jan:300,feb:0,mar:500,total:1940},
+        {name:"GRACE BARAZA",jul:140,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:140},
+        {name:"SALOME NANGA",jul:210,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:310},
+        {name:"VIOLET MUTEMBA",jul:280,aug:0,sep:0,oct:100,nov:300,dec:0,jan:0,feb:0,mar:0,total:680},
+        {name:"ROSELINE ADIEDO",jul:280,aug:0,sep:0,oct:0,nov:300,dec:0,jan:0,feb:0,mar:0,total:580},
+        {name:"NOEL ANYOSO",jul:350,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:450},
+        {name:"MBANJA EUWIMBUNKS",jul:140,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:140},
+        {name:"JOYCE MAHAGWA",jul:350,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:450},
+        {name:"RUTH ANYIENDA",jul:350,aug:0,sep:0,oct:100,nov:300,dec:100,jan:0,feb:0,mar:0,total:850},
+        {name:"LYDIA BUSENA",jul:210,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:210},
+        {name:"CAROLINE MUSAVI",jul:380,aug:70,sep:300,oct:100,nov:600,dec:300,jan:300,feb:200,mar:0,total:2550},
+        {name:"RACHEL KADAMBI",jul:210,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:310},
+        {name:"EVELYNE NDEJE",jul:440,aug:100,sep:300,oct:100,nov:900,dec:300,jan:300,feb:200,mar:500,total:3440},
+        {name:"CAROLINE KHAMUKA",jul:350,aug:0,sep:0,oct:100,nov:600,dec:100,jan:0,feb:0,mar:0,total:1150},
+        {name:"JUDY MAKULU",jul:210,aug:0,sep:0,oct:100,nov:0,dec:0,jan:0,feb:0,mar:0,total:310},
+        {name:"HARRIET JANANGA",jul:210,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:210},
+        {name:"WINNIE SALAMBA",jul:280,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:280},
+        {name:"JACKLINE MAHAGWA",jul:210,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:210},
+        {name:"CAROLINE AVIGOKE",jul:280,aug:0,sep:300,oct:0,nov:300,dec:100,jan:0,feb:200,mar:0,total:1180},
+        {name:"BERVERLY OCHAMI",jul:210,aug:0,sep:0,oct:100,nov:300,dec:0,jan:0,feb:0,mar:0,total:610},
+        {name:"RACHEL MISOGA",jul:280,aug:0,sep:0,oct:100,nov:300,dec:100,jan:0,feb:0,mar:0,total:780},
+        {name:"BEATRICE ASSEMBEKA",jul:140,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:140},
+        {name:"BEATRICE ANJILA",jul:350,aug:0,sep:0,oct:100,nov:300,dec:0,jan:0,feb:0,mar:0,total:750},
+        {name:"SHAMI FADHIL",jul:210,aug:0,sep:0,oct:100,nov:300,dec:100,jan:0,feb:0,mar:0,total:710},
+        {name:"REBECCA SERUYA",jul:210,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:210},
+        {name:"SUSAN MUGA",jul:210,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:210},
+        {name:"JOY LIGABO",jul:0,aug:0,sep:0,oct:0,nov:0,dec:0,jan:0,feb:0,mar:0,total:0}
+    ];
+
+    const DEFAULT_CONTRIB = [
+        {name:"DARVINE KATENYA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"ABBY ASILA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"MILLICENT BULINDA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"RUTH AJIAMBO",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"LAVERA OMWANGALE",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"GRACE JALEHA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"EDITH MIDEVA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"COLLETA MISIJI",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"MILDRED MUKOLWE",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"JEMIMA OMUKUBA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"MILDRED NJENGO",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"FLORENCE INYAGWA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"NANCY SUSU",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"HARRIET AYEKHA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"GRACE BARAZA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"SALOME NANGA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"VIOLET MUTEMBA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"ROSELINE ADIEDO",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"NOEL ANYOSO",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"MBANJA EUWIMBUNKS",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"JOYCE MAHAGWA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"RUTH ANYIENDA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"LYDIA BUSENA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"CAROLINE MUSAVI",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"RACHEL KADAMBI",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"EVELYNE NDEJE",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"CAROLINE KHAMUKA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"JUDY MAKULU",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"HARRIET JANANGA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"WINNIE SALAMBA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"JACKLINE MAHAGWA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"CAROLINE AVIGOKE",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"BERVERLY OCHAMI",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"RACHEL MISOGA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"BEATRICE ASSEMBEKA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"BEATRICE ANJILA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"SHAMI FADHIL",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"REBECCA SERUYA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"SUSAN MUGA",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"},
+        {name:"JOY LIGABO",apr:"2,000",may:"2,000",jun:"2,000",jul:"2,000",aug:"2,000",sep:"2,000"}
+    ];
+
+    const DEFAULT_MINUTES = [
+        {id:"1",title:"Inaugural Framework General Review",date:"2025-05-12",filename:"Inaugural_Minutes.pdf",url:""},
+        {id:"2",title:"Quarterly Budget & Welfare Adjustments",date:"2025-08-19",filename:"Quarterly_Review.pdf",url:""}
+    ];
+
+    // Load initial state — try Firestore first, fall back to localStorage
+    function parse(raw, fallback) {
+        try { return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; }
+    }
+
+    try {
+        const snap = await getDoc(DOCREF);
+        const d = snap.exists() ? snap.data() : {};
+        months       = parse(d.months,     loadLocal('months',     DEFAULT_MONTHS));
+        labels       = parse(d.labels,     loadLocal('labels',     DEFAULT_LABELS));
+        cursors      = parse(d.cursors,    loadLocal('cursors',    {host:0,contrib:0,savings:0,fines:0,attendance:0}));
+        hostSchedule = parse(d.hosts,      loadLocal('hosts',      DEFAULT_HOSTS));
+        attendance   = parse(d.attendance, loadLocal('attendance', DEFAULT_ATTENDANCE));
+        fines        = parse(d.fines,      loadLocal('fines',      DEFAULT_FINES));
+        savings      = parse(d.savings,    loadLocal('savings',    DEFAULT_SAVINGS));
+        contrib      = parse(d.contrib,    loadLocal('contrib',    DEFAULT_CONTRIB));
+        minutes      = parse(d.minutes,    loadLocal('minutes',    DEFAULT_MINUTES));
+    } catch(e) {
+        // Firestore unavailable — use localStorage / defaults
+        months       = loadLocal('months',     DEFAULT_MONTHS);
+        labels       = loadLocal('labels',     DEFAULT_LABELS);
+        cursors      = loadLocal('cursors',    {host:0,contrib:0,savings:0,fines:0,attendance:0});
+        hostSchedule = loadLocal('hosts',      DEFAULT_HOSTS);
+        attendance   = loadLocal('attendance', DEFAULT_ATTENDANCE);
+        fines        = loadLocal('fines',      DEFAULT_FINES);
+        savings      = loadLocal('savings',    DEFAULT_SAVINGS);
+        contrib      = loadLocal('contrib',    DEFAULT_CONTRIB);
+        minutes      = loadLocal('minutes',    DEFAULT_MINUTES);
+    }
+
+    _firestoreReady = true;
+    document.getElementById('loadingOverlay').style.display = 'none';
+
+    // ── Render all sections ──
+    ['host','contrib','savings','fines','attendance'].forEach(renderSection);
+    renderMinutes();
+
+    // ── Real-time listener: update all viewers when admin saves ──
+    onSnapshot(DOCREF, (snap) => {
+        if (!snap.exists()) return;
+        const d = snap.data();
+        function parse(raw, cur) { try { return raw ? JSON.parse(raw) : cur; } catch(e){ return cur; } }
+        months       = parse(d.months,     months);
+        labels       = parse(d.labels,     labels);
+        hostSchedule = parse(d.hosts,      hostSchedule);
+        attendance   = parse(d.attendance, attendance);
+        fines        = parse(d.fines,      fines);
+        savings      = parse(d.savings,    savings);
+        contrib      = parse(d.contrib,    contrib);
+        minutes      = parse(d.minutes,    minutes);
+        // Do NOT overwrite cursors from remote — each device keeps its own navigation position
+        ['host','contrib','savings','fines','attendance'].forEach(renderSection);
+        renderMinutes();
+    });
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function toast(msg, type='success') {
+    const stack = document.getElementById('toast-stack');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    stack.appendChild(el);
+    requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ═══════════════════════════════════════════
+//  CONFIRM DIALOG
+// ═══════════════════════════════════════════
+let _confirmResolve = null;
+function showConfirm(title, msg) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmDialog').classList.add('open');
+    return new Promise(r => _confirmResolve = r);
+}
+function confirmResolve(val) {
+    document.getElementById('confirmDialog').classList.remove('open');
+    if (_confirmResolve) { _confirmResolve(val); _confirmResolve = null; }
+}
+
+// ═══════════════════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════════════════
+let _editCtx = null;
+function openEditModal(title, fields, ctx) {
+    document.getElementById('editModalTitle').textContent = title;
+    let html = '';
+    fields.forEach(f => {
+        html += `<div class="modal-field"><label>${f.label}</label>`;
+        if (f.type === 'select') {
+            html += `<select id="ef_${f.key}">`;
+            f.options.forEach(o => html += `<option value="${o.value}" ${o.value == f.value ? 'selected' : ''}>${o.label}</option>`);
+            html += `</select>`;
+        } else {
+            html += `<input type="${f.type||'text'}" id="ef_${f.key}" value="${f.value ?? ''}">`;
+        }
+        html += `</div>`;
+    });
+    document.getElementById('editModalBody').innerHTML = html;
+    _editCtx = ctx;
+    document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); _editCtx = null; }
+function commitEdit() { if (!_editCtx) return; _editCtx(); closeEditModal(); }
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+function doLogin() {
+    const v = document.getElementById('adminKey').value;
+    if (v === SECRET) activateAdmin();
+    else toast('Incorrect passkey.', 'error');
+}
+function doPage2Login() {
+    const v = document.getElementById('p2pass').value;
+    if (v === SECRET) {
+        activateAdmin();
+        document.getElementById('gatewayBox').style.display = 'none';
+        document.getElementById('gatewaySuccess').style.display = 'block';
+    } else toast('Incorrect passkey.', 'error');
+}
+function activateAdmin() {
+    isAdmin = true;
+    document.getElementById('authLabel').textContent = '🔓 Admin Mode';
+    document.getElementById('adminKey').style.display = 'none';
+    document.getElementById('authBtn').style.display = 'none';
+    document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'block');
+    document.querySelectorAll('.export-btn').forEach(b => b.style.display = 'inline-block');
+    ['host','contrib','savings','fines','attendance'].forEach(renderSection);
+    renderMinutes();
+    toast('Administrator access granted.');
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function gotoPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    window.scrollTo(0,0);
+}
+function navMonth(key, dir) {
+    let n = cursors[key] + dir;
+    if (n >= 0 && n < months.length) { cursors[key] = n; save('cursors', cursors); renderSection(key); }
+}
+
+// ═══════════════════════════════════════════
+//  ADD TIMELINE
+// ═══════════════════════════════════════════
+function addTimeline() {
+    const mSel = document.getElementById('newMonth');
+    const yVal = document.getElementById('newYear').value.trim();
+    if (!yVal) { toast('Please enter a year.', 'error'); return; }
+    const key = mSel.value + yVal;
+    const label = mSel.options[mSel.selectedIndex].text + ' ' + yVal;
+    if (!months.includes(key)) {
+        months.push(key); labels[key] = label;
+        hostSchedule[key] = [];
+        attendance.forEach(r => { r[key] = ''; });
+        fines.forEach(r => { r[key] = 0; });
+        contrib.forEach(r => { r[key] = ''; });
+        savings.forEach(r => { r[key] = 0; });
+        save('months', months); save('labels', labels);
+        save('hosts', hostSchedule); save('attendance', attendance);
+        save('fines', fines); save('contrib', contrib); save('savings', savings);
+    }
+    ['host','contrib','savings','fines','attendance'].forEach(k => {
+        cursors[k] = months.length - 1;
+        renderSection(k);
+    });
+    save('cursors', cursors);
+    toast(`Timeline for ${label} created.`);
+}
+
+// ═══════════════════════════════════════════
+//  ADD RECORDS
+// ═══════════════════════════════════════════
+function addRecord(key) {
+    const mk = months[cursors[key]];
+    if (key === 'savings') {
+        const name = document.getElementById('savName').value.trim().toUpperCase();
+        const amt = parseInt(document.getElementById('savAmt').value) || 0;
+        const ov = document.getElementById('savTotal').value.trim();
+        if (!name) { toast('Enter a member name.', 'error'); return; }
+        let row = savings.find(r => r.name === name);
+        if (row) { row[mk] = amt; row.total = ov !== '' ? parseInt(ov) : row.total + amt; }
+        else { let r = {name, total: ov !== '' ? parseInt(ov) : amt}; r[mk] = amt; savings.push(r); }
+        document.getElementById('savName').value=''; document.getElementById('savAmt').value=''; document.getElementById('savTotal').value='';
+        save('savings', savings); renderSection('savings'); toast('Savings entry saved.');
+    }
+    if (key === 'fines') {
+        const name = document.getElementById('fineName').value.trim().toUpperCase();
+        const amt = parseInt(document.getElementById('fineAmt').value) || 0;
+        const debt = parseInt(document.getElementById('fineDebt').value) || 0;
+        if (!name) { toast('Enter a member name.', 'error'); return; }
+        let row = fines.find(r => r.name === name);
+        if (row) { row[mk] = amt; row.debt = debt; }
+        else { let r = {name, debt}; r[mk] = amt; fines.push(r); }
+        document.getElementById('fineName').value=''; document.getElementById('fineAmt').value=''; document.getElementById('fineDebt').value='';
+        save('fines', fines); renderSection('fines'); toast('Fine record saved.');
+    }
+    if (key === 'contrib') {
+        const name = document.getElementById('ctbName').value.trim().toUpperCase();
+        const amt = document.getElementById('ctbAmt').value.trim();
+        if (!name) { toast('Enter a member name.', 'error'); return; }
+        let row = contrib.find(r => r.name === name);
+        if (row) { row[mk] = amt; }
+        else { let r = {name}; r[mk] = amt; contrib.push(r); }
+        document.getElementById('ctbName').value=''; document.getElementById('ctbAmt').value='';
+        save('contrib', contrib); renderSection('contrib'); toast('Contribution saved.');
+    }
+    if (key === 'attendance') {
+        const name = document.getElementById('attName').value.trim().toUpperCase();
+        const status = document.getElementById('attStatus').value;
+        if (!name) { toast('Enter a member name.', 'error'); return; }
+        let row = attendance.find(r => r.name === name);
+        if (row) { row[mk] = status; }
+        else { let r = {name}; r[mk] = status; attendance.push(r); }
+        document.getElementById('attName').value='';
+        save('attendance', attendance); renderSection('attendance'); toast('Attendance saved.');
+    }
+}
+function addHost() {
+    const mk = months[cursors['host']];
+    const name = document.getElementById('hostName').value.trim().toUpperCase();
+    if (!name) { toast('Enter a member name.', 'error'); return; }
+    if (!hostSchedule[mk]) hostSchedule[mk] = [];
+    hostSchedule[mk].push((hostSchedule[mk].length + 1) + '. ' + name);
+    document.getElementById('hostName').value='';
+    save('hosts', hostSchedule); renderSection('host'); toast('Host assignment saved.');
+}
+
+// ═══════════════════════════════════════════
+//  EDIT (INLINE MODAL)
+// ═══════════════════════════════════════════
+function editSavings(idx) {
+    const mk = months[cursors['savings']]; const row = savings[idx];
+    openEditModal(`Edit — ${row.name}`, [
+        {key:'amt', label:'Monthly savings (KES)', type:'number', value: row[mk]||0},
+        {key:'total', label:'Cumulative total (KES)', type:'number', value: row.total}
+    ], () => {
+        row[mk] = parseInt(document.getElementById('ef_amt').value)||0;
+        row.total = parseInt(document.getElementById('ef_total').value)||0;
+        save('savings', savings); renderSection('savings'); toast('Savings updated.');
+    });
+}
+function editFines(idx) {
+    const mk = months[cursors['fines']]; const row = fines[idx];
+    openEditModal(`Edit — ${row.name}`, [
+        {key:'amt', label:'Fine this month (KES)', type:'number', value: row[mk]||0},
+        {key:'debt', label:'Outstanding total (KES)', type:'number', value: row.debt}
+    ], () => {
+        row[mk] = parseInt(document.getElementById('ef_amt').value)||0;
+        row.debt = parseInt(document.getElementById('ef_debt').value)||0;
+        save('fines', fines); renderSection('fines'); toast('Fine record updated.');
+    });
+}
+function editContrib(idx) {
+    const mk = months[cursors['contrib']]; const row = contrib[idx];
+    openEditModal(`Edit — ${row.name}`, [
+        {key:'amt', label:'Amount (KES)', type:'text', value: row[mk]||''}
+    ], () => {
+        row[mk] = document.getElementById('ef_amt').value;
+        save('contrib', contrib); renderSection('contrib'); toast('Contribution updated.');
+    });
+}
+function editAttendance(idx) {
+    const mk = months[cursors['attendance']]; const row = attendance[idx];
+    openEditModal(`Edit — ${row.name}`, [
+        {key:'status', label:'Status', type:'select', value: row[mk]||'-', options:[
+            {value:'V',label:'Present (V)'},{value:'X',label:'Absent (X)'},{value:'-',label:'Exempt (−)'}
+        ]}
+    ], () => {
+        row[mk] = document.getElementById('ef_status').value;
+        save('attendance', attendance); renderSection('attendance'); toast('Attendance updated.');
+    });
+}
+
+// ═══════════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════════
+async function deleteRow(key, idx) {
+    const ok = await showConfirm('Remove record', 'This will permanently delete this member row. Continue?');
+    if (!ok) return;
+    if (key==='savings') savings.splice(idx,1), save('savings',savings);
+    if (key==='fines') fines.splice(idx,1), save('fines',fines);
+    if (key==='contrib') contrib.splice(idx,1), save('contrib',contrib);
+    if (key==='attendance') attendance.splice(idx,1), save('attendance',attendance);
+    renderSection(key); toast('Record removed.', 'info');
+}
+async function deleteHost(mk, idx) {
+    const ok = await showConfirm('Remove host', 'Remove this host assignment?');
+    if (!ok) return;
+    hostSchedule[mk].splice(idx,1); save('hosts',hostSchedule); renderSection('host'); toast('Host removed.','info');
+}
+
+// ═══════════════════════════════════════════
+//  RENDER SECTIONS
+// ═══════════════════════════════════════════
+function renderSection(key) {
+    const mk = months[cursors[key]];
+    const lbl = labels[mk] || mk;
+    const adm = isAdmin;
+
+    if (key === 'host') {
+        document.getElementById('hostTitle').textContent = lbl;
+        const pool = hostSchedule[mk] || [];
+        let h = `<div class="host-grid">`;
+        if (!pool.length) h += `<div style="color:var(--muted);padding:10px">No hosts scheduled for this month.</div>`;
+        else pool.forEach((m,i) => h += `<div class="host-tile"><span>${m}</span>${adm?`<button class="btn btn-danger btn-sm" onclick="deleteHost('${mk}',${i})">Remove</button>`:''}</div>`);
+        h += `</div>`;
+        document.getElementById('hostContainer').innerHTML = h;
+        return;
+    }
+
+    const sections = {
+        contrib: { titleEl:'contribTitle', containerEl:'contribContainer', dataset: contrib,
+            head: `<th>Member</th><th>Amount (KES)</th>`,
+            row: (r,i) => `<td>${r.name}</td><td>KES ${r[mk]||'—'}</td>`,
+            editFn: `editContrib` },
+        savings: { titleEl:'savingsTitle', containerEl:'savingsContainer', dataset: savings,
+            head: `<th>Member</th><th>This Month (KES)</th><th>Cumulative (KES)</th>`,
+            row: (r,i) => `<td>${r.name}</td><td>KES ${r[mk]||'—'}</td><td><strong>KES ${r.total||0}</strong></td>`,
+            editFn: `editSavings` },
+        fines: { titleEl:'finesTitle', containerEl:'finesContainer', dataset: fines,
+            head: `<th>Member</th><th>Fine This Month</th><th>Outstanding Total</th>`,
+            row: (r,i) => `<td>${r.name}</td><td>KES ${r[mk]||0}</td><td><strong style="color:var(--danger)">KES ${r.debt||0}</strong></td>`,
+            editFn: `editFines` },
+        attendance: { titleEl:'attendanceTitle', containerEl:'attendanceContainer', dataset: attendance,
+            head: `<th>Member</th><th>Status</th>`,
+            row: (r,i) => {
+                const f = r[mk]||'-';
+                const cls = f==='V'?'badge-v':f==='X'?'badge-x':'badge-dash';
+                return `<td>${r.name}</td><td><span class="badge ${cls}">${f}</span></td>`;
+            },
+            editFn: `editAttendance` }
+    };
+
+    const cfg = sections[key]; if (!cfg) return;
+    document.getElementById(cfg.titleEl).textContent = lbl;
+    let h = `<div class="tbl-wrap"><table><thead><tr>${cfg.head}${adm?'<th>Actions</th>':''}</tr></thead><tbody>`;
+    cfg.dataset.forEach((r,i) => {
+        h += `<tr>${cfg.row(r,i)}`;
+        if (adm) h += `<td style="white-space:nowrap"><button class="btn btn-warning btn-sm" onclick="${cfg.editFn}(${i})" style="margin-right:4px">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteRow('${key}',${i})">Remove</button></td>`;
+        h += `</tr>`;
+    });
+    h += `</tbody></table></div>`;
+    document.getElementById(cfg.containerEl).innerHTML = h;
+}
+
+// ═══════════════════════════════════════════
+//  MINUTES  — stores a public URL (not a blob)
+//  so any device / browser can open the document
+// ═══════════════════════════════════════════
+function renderMinutes() {
+    const box = document.getElementById('minutesContainer');
+    if (!minutes || !minutes.length) { box.innerHTML = `<p style="color:var(--muted)">No minutes on record yet.</p>`; return; }
+    box.innerHTML = minutes.map(m => `
+        <div class="minute-card">
+            <h4>📂 ${m.title}</h4>
+            <div class="minute-meta">Meeting date: <strong>${m.date}</strong></div>
+            <p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">${m.filename}</p>
+            ${m.url ? `<a class="pdf-link" href="${m.url}" target="_blank" rel="noopener">View document</a>` : `<span style="color:var(--muted);font-size:.82rem">No link saved — admin must add a URL.</span>`}
+            ${isAdmin ? `<br><button class="btn btn-danger btn-sm" style="margin-top:10px" onclick="deleteMinute('${m.id}')">Delete</button>` : ''}
+        </div>`).join('');
+}
+
+function uploadMinutes() {
+    const title    = document.getElementById('minTitle').value.trim();
+    const date     = document.getElementById('minDate').value;
+    const filename = document.getElementById('minFilename').value.trim();
+    const url      = document.getElementById('minUrl').value.trim();
+    if (!title || !date || !filename) { toast('Fill in title, date and file name.','error'); return; }
+    if (url && !url.startsWith('http')) { toast('URL must start with http:// or https://','error'); return; }
+    const rec = {id:Date.now()+'', title, date, filename, url: url || ''};
+    minutes.push(rec);
+    save('minutes', minutes);
+    document.getElementById('minTitle').value='';
+    document.getElementById('minDate').value='';
+    document.getElementById('minFilename').value='';
+    document.getElementById('minUrl').value='';
+    renderMinutes();
+    toast('Minutes published — visible to everyone.');
+}
+
+async function deleteMinute(id) {
+    const ok = await showConfirm('Delete minutes entry','This will remove this PDF record permanently.');
+    if (!ok) return;
+    minutes = minutes.filter(m => m.id !== id);
+    save('minutes', minutes);
+    renderMinutes();
+    toast('Entry removed.','info');
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════
+function exportTable(elId, name) {
+    const el = document.getElementById(elId); if (!el) return;
+    const blob = new Blob(['\uFEFF' + el.innerHTML], {type:'application/msword'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '_' + new Date().toISOString().slice(0,10) + '.doc';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('Table downloaded.');
+}
+
+// ── Expose non-module functions to global scope (onclick= attributes) ──
+window.doLogin=doLogin; window.doPage2Login=doPage2Login;
+window.gotoPage=gotoPage; window.navMonth=navMonth;
+window.addTimeline=addTimeline; window.addRecord=addRecord; window.addHost=addHost;
+window.editSavings=editSavings; window.editFines=editFines;
+window.editContrib=editContrib; window.editAttendance=editAttendance;
+window.deleteRow=deleteRow; window.deleteHost=deleteHost;
+window.uploadMinutes=uploadMinutes; window.deleteMinute=deleteMinute;
+window.exportTable=exportTable;
+window.closeEditModal=closeEditModal; window.commitEdit=commitEdit;
+window.confirmResolve=confirmResolve;
+
+// ── Boot ──
+initData();
+</script>
+</body>
+</html>
