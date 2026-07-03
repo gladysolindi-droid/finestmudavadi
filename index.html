@@ -269,32 +269,106 @@
 <div id="p3" class="page">
     <div class="card">
         <div class="card-title">Management Console</div>
+
         <div class="admin-panel" id="calendarPanel">
             <h4>📅 Add New Month / Year</h4>
+
             <div class="admin-fields">
                 <select id="newMonth">
-                    <option value="jan">January</option><option value="feb">February</option>
-                    <option value="mar">March</option><option value="apr">April</option>
-                    <option value="may">May</option><option value="jun">June</option>
-                    <option value="jul">July</option><option value="aug">August</option>
-                    <option value="sep">September</option><option value="oct">October</option>
-                    <option value="nov">November</option><option value="dec">December</option>
+                    <option value="jan">January</option>
+                    <option value="feb">February</option>
+                    <option value="mar">March</option>
+                    <option value="apr">April</option>
+                    <option value="may">May</option>
+                    <option value="jun">June</option>
+                    <option value="jul">July</option>
+                    <option value="aug">August</option>
+                    <option value="sep">September</option>
+                    <option value="oct">October</option>
+                    <option value="nov">November</option>
+                    <option value="dec">December</option>
                 </select>
-                <input type="number" id="newYear" value="2026" style="width:110px" placeholder="Year">
-                <button class="btn btn-success" onclick="addTimeline()">Add Timeline Frame</button>
+
+                <input type="number"
+                       id="newYear"
+                       value="2026"
+                       style="width:110px"
+                       placeholder="Year">
+
+                <button class="btn btn-success" onclick="addTimeline()">
+                    Add Timeline Frame
+                </button>
             </div>
+
+            <hr>
+
+            <h4>🗑 Delete Existing Month / Year</h4>
+
+            <div class="admin-fields">
+                <select id="deleteMonth">
+                    <option value="jan">January</option>
+                    <option value="feb">February</option>
+                    <option value="mar">March</option>
+                    <option value="apr">April</option>
+                    <option value="may">May</option>
+                    <option value="jun">June</option>
+                    <option value="jul">July</option>
+                    <option value="aug">August</option>
+                    <option value="sep">September</option>
+                    <option value="oct">October</option>
+                    <option value="nov">November</option>
+                    <option value="dec">December</option>
+                </select>
+
+                <input type="number"
+                       id="deleteYear"
+                       value="2026"
+                       style="width:110px"
+                       placeholder="Year">
+
+                <button class="btn btn-danger" onclick="deleteTimeline()">
+                    Delete Timeline Frame
+                </button>
+            </div>
+
         </div>
+
         <div class="dash-grid">
-            <div class="dash-tile" onclick="gotoPage('p4',document.querySelectorAll('.nav-tabs button')[3])"><h3>🏦 Savings</h3><p>Monthly savings &amp; cumulative balances</p></div>
-            <div class="dash-tile" onclick="gotoPage('p5',document.querySelectorAll('.nav-tabs button')[4])"><h3>⚠️ Fines</h3><p>Infraction records &amp; outstanding arrears</p></div>
-            <div class="dash-tile" onclick="gotoPage('p6',document.querySelectorAll('.nav-tabs button')[5])"><h3>🔄 Contributions</h3><p>Monthly merry-go-round entries</p></div>
-            <div class="dash-tile" onclick="gotoPage('p7',document.querySelectorAll('.nav-tabs button')[6])"><h3>📅 Host Schedules</h3><p>Monthly hosting assignments</p></div>
-            <div class="dash-tile" onclick="gotoPage('p8',document.querySelectorAll('.nav-tabs button')[7])"><h3>👥 Attendance</h3><p>Member presence &amp; exemptions</p></div>
-            <div class="dash-tile" onclick="gotoPage('p9',document.querySelectorAll('.nav-tabs button')[8])"><h3>📄 Meeting Minutes</h3><p>PDF records &amp; archived proceedings</p></div>
+
+            <div class="dash-tile" onclick="gotoPage('p4',document.querySelectorAll('.nav-tabs button')[3])">
+                <h3>🏦 Savings</h3>
+                <p>Monthly savings &amp; cumulative balances</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p5',document.querySelectorAll('.nav-tabs button')[4])">
+                <h3>⚠️ Fines</h3>
+                <p>Infraction records &amp; outstanding arrears</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p6',document.querySelectorAll('.nav-tabs button')[5])">
+                <h3>🔄 Contributions</h3>
+                <p>Monthly merry-go-round entries</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p7',document.querySelectorAll('.nav-tabs button')[6])">
+                <h3>📅 Host Schedules</h3>
+                <p>Monthly hosting assignments</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p8',document.querySelectorAll('.nav-tabs button')[7])">
+                <h3>👥 Attendance</h3>
+                <p>Member presence &amp; exemptions</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p9',document.querySelectorAll('.nav-tabs button')[8])">
+                <h3>📄 Meeting Minutes</h3>
+                <p>PDF records &amp; archived proceedings</p>
+            </div>
+
         </div>
+
     </div>
 </div>
-
 <!-- PAGE 4: SAVINGS -->
 <div id="p4" class="page">
     <div class="card">
