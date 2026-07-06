@@ -952,7 +952,62 @@ function addTimeline() {
         renderSection(k);
     });
     save('cursors', cursors);
-    toast(`Timeline for ${label} created.`);
+    toast(`Timeline for ${label} created.`);function deleteTimeline() {
+
+    const mSel = document.getElementById('deleteMonth');
+    const yVal = document.getElementById('deleteYear').value.trim();
+
+    if (!yVal) {
+        toast('Please enter a year.', 'error');
+        return;
+    }
+
+    const key = mSel.value + yVal;
+    const label = labels[key] || (mSel.options[mSel.selectedIndex].text + ' ' + yVal);
+
+    if (!months.includes(key)) {
+        toast('Timeline does not exist.', 'error');
+        return;
+    }
+
+    if (!confirm(`Delete ${label}? This cannot be undone.`)) {
+        return;
+    }
+
+    // Remove from months list
+    months = months.filter(m => m !== key);
+
+    // Remove label
+    delete labels[key];
+
+    // Remove host schedule
+    delete hostSchedule[key];
+
+    // Remove month from every member
+    attendance.forEach(r => delete r[key]);
+    fines.forEach(r => delete r[key]);
+    contrib.forEach(r => delete r[key]);
+    savings.forEach(r => delete r[key]);
+
+    // Save everything
+    save('months', months);
+    save('labels', labels);
+    save('hosts', hostSchedule);
+    save('attendance', attendance);
+    save('fines', fines);
+    save('contrib', contrib);
+    save('savings', savings);
+
+    // Reset cursors
+    ['host','contrib','savings','fines','attendance'].forEach(k => {
+        cursors[k] = Math.max(0, months.length - 1);
+        renderSection(k);
+    });
+
+    save('cursors', cursors);
+
+    toast(`${label} deleted successfully.`);
+}
 }
 
 // ═══════════════════════════════════════════
