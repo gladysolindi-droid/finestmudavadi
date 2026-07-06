@@ -973,25 +973,17 @@ function navMonth(key, dir) {
     toast(`Timeline for ${label} created.`);
 }   // ← addTimeline ENDS HERE
 
+
 function deleteTimeline() {
 
-    const mSel = document.getElementById('deleteMonth');
-    const yVal = document.getElementById('deleteYear').value.trim();
+    const key = document.getElementById("deleteTimelineSelect").value;
 
-    if (!yVal) {
-        toast('Please enter a year.', 'error');
+    if (!key) {
+        toast("Please select a timeline.", "error");
         return;
     }
 
-    const key = mSel.value + yVal;
-    const label = labels[key] || (mSel.options[mSel.selectedIndex].text + ' ' + yVal);
-
-    if (!months.includes(key)) {
-        toast('Timeline does not exist.', 'error');
-        return;
-    }
-
-    if (!confirm(`Delete ${label}? This cannot be undone.`)) {
+    if (!confirm("Delete " + labels[key] + "?")) {
         return;
     }
 
@@ -1005,24 +997,25 @@ function deleteTimeline() {
     contrib.forEach(r => delete r[key]);
     savings.forEach(r => delete r[key]);
 
-    save('months', months);
-    save('labels', labels);
-    save('hosts', hostSchedule);
-    save('attendance', attendance);
-    save('fines', fines);
-    save('contrib', contrib);
-    save('savings', savings);
+    save("months", months);
+    save("labels", labels);
+    save("hosts", hostSchedule);
+    save("attendance", attendance);
+    save("fines", fines);
+    save("contrib", contrib);
+    save("savings", savings);
+
+    refreshDeleteList();
 
     ['host','contrib','savings','fines','attendance'].forEach(k => {
         cursors[k] = Math.max(0, months.length - 1);
         renderSection(k);
     });
 
-    save('cursors', cursors);
+    save("cursors", cursors);
 
-    toast(`${label} deleted successfully.`);
+    toast("Timeline deleted successfully.");
 }
-
 
 // ═══════════════════════════════════════════
 //  ADD RECORDS
