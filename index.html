@@ -117,6 +117,22 @@
         .minute-meta { font-size: .78rem; color: var(--muted); margin-bottom: 10px; }
         .pdf-link { color: var(--primary-light); text-decoration: underline; font-weight: 700; cursor: pointer; font-size: .88rem; }
 
+        /* ── MEMBER PROFILE SHEET ── */
+        .profile-sheet { font-family: 'Courier New', Courier, monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 26px 24px; max-width: 540px; margin: 0 auto; }
+        .profile-title { text-align: center; font-weight: 800; letter-spacing: .1em; color: var(--primary); font-size: 1.05rem; }
+        .profile-divider { border-top: 1px dashed var(--border); margin: 12px 0; }
+        .profile-divider-end { border-top: 2px solid var(--primary); }
+        .profile-name-block { text-align: center; }
+        .profile-name-label { display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+        .profile-name-value { font-weight: 800; font-size: 1.15rem; color: var(--text); margin-top: 2px; }
+        .profile-section-title { font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: .8rem; letter-spacing: .05em; margin-bottom: 8px; }
+        .profile-line { display: flex; align-items: baseline; font-size: .85rem; padding: 2px 0; }
+        .profile-line-strong { font-weight: 800; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+        .profile-label { white-space: nowrap; }
+        .profile-value { white-space: nowrap; font-weight: 700; margin-left: 4px; }
+        .profile-dots { flex: 1; border-bottom: 1px dotted var(--muted); margin: 0 6px 3px; min-width: 10px; }
+        .profile-empty { color: var(--muted); font-size: .85rem; padding: 4px 0 2px; }
+
         /* ── MODAL ── */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
         .modal-backdrop.open { opacity: 1; pointer-events: all; }
@@ -226,6 +242,7 @@
         <button onclick="gotoPage('p7',this)">Host Schedules</button>
         <button onclick="gotoPage('p8',this)">Attendance</button>
         <button onclick="gotoPage('p9',this)">Meeting Minutes</button>
+        <button onclick="gotoPage('p10',this)">Member Profile</button>
     </div>
 </nav>
 
@@ -346,6 +363,11 @@
             <div class="dash-tile" onclick="gotoPage('p9',document.querySelectorAll('.nav-tabs button')[8])">
                 <h3>📄 Meeting Minutes</h3>
                 <p>PDF records &amp; archived proceedings</p>
+            </div>
+
+            <div class="dash-tile" onclick="gotoPage('p10',document.querySelectorAll('.nav-tabs button')[9])">
+                <h3>🧾 Member Profile</h3>
+                <p>Full savings, fines &amp; attendance record per member</p>
             </div>
 
         </div>
@@ -479,6 +501,23 @@
             <p style="font-size:.78rem;color:var(--muted);margin-top:8px">Tip: upload your PDF to Google Drive, set sharing to <strong>Anyone with the link → Viewer</strong>, then paste the link above.</p>
         </div>
         <div class="minutes-grid" id="minutesContainer"></div>
+    </div>
+</div>
+
+<!-- PAGE 10: MEMBER PROFILE -->
+<div id="p10" class="page">
+    <div class="card">
+        <div class="card-title">🧾 Member Profile</div>
+        <p style="color:var(--muted);margin-bottom:16px;">Pick a member to view her complete savings, fines, contributions, attendance, and host-schedule history in one printable sheet.</p>
+        <div class="admin-fields" style="margin-bottom:20px;">
+            <select id="profileMemberSelect" style="min-width:260px" onchange="renderMemberProfile(this.value)">
+                <option value="">— No members yet —</option>
+            </select>
+            <button class="btn btn-purple" onclick="exportProfile()">⬇ Download Profile</button>
+        </div>
+        <div id="profileSheet">
+            <p class="profile-empty">Select a member above to view her full profile.</p>
+        </div>
     </div>
 </div>
 
@@ -795,6 +834,7 @@ async function initData() {
     ['host','contrib','savings','fines','attendance'].forEach(renderSection);
     renderMinutes();
     populateDeleteSelect();
+    populateMemberSelect();
 
     // ── Real-time listener: update all viewers when admin saves ──
     onSnapshot(DOCREF, (snap) => {
@@ -813,6 +853,7 @@ async function initData() {
         ['host','contrib','savings','fines','attendance'].forEach(renderSection);
         renderMinutes();
         populateDeleteSelect();
+        populateMemberSelect();
     });
 }
 
@@ -932,6 +973,125 @@ function populateDeleteSelect() {
 }
 
 // ═══════════════════════════════════════════
+//  MEMBER PROFILE
+//  Consolidates a single member's savings, fines,
+//  contributions, attendance and host history into
+//  one printable, receipt-style sheet.
+// ═══════════════════════════════════════════
+function getAllMemberNames() {
+    const names = new Set();
+    [savings, fines, contrib, attendance].forEach(list => (list || []).forEach(r => { if (r && r.name) names.add(r.name); }));
+    return Array.from(names).sort();
+}
+
+function populateMemberSelect() {
+    const sel = document.getElementById('profileMemberSelect');
+    if (!sel) return;
+    const prevValue = sel.value;
+    const names = getAllMemberNames();
+
+    if (!names.length) {
+        sel.innerHTML = `<option value="">— No members yet —</option>`;
+        renderMemberProfile('');
+        return;
+    }
+
+    sel.innerHTML = `<option value="">Select a member…</option>` + names.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    if (names.includes(prevValue)) {
+        sel.value = prevValue;
+        renderMemberProfile(prevValue);
+    } else {
+        renderMemberProfile('');
+    }
+}
+
+function profileLine(label, value, strong) {
+    return `<div class="profile-line${strong ? ' profile-line-strong' : ''}"><span class="profile-label">${label}</span><span class="profile-dots"></span><span class="profile-value">${value}</span></div>`;
+}
+
+function renderMemberProfile(name) {
+    const box = document.getElementById('profileSheet');
+    if (!box) return;
+
+    if (!name) {
+        box.innerHTML = `<p class="profile-empty">Select a member above to view her full profile.</p>`;
+        return;
+    }
+
+    const savRow  = savings.find(r => r.name === name);
+    const fineRow = fines.find(r => r.name === name);
+    const ctbRow  = contrib.find(r => r.name === name);
+    const attRow  = attendance.find(r => r.name === name);
+    const statusMap = { V: 'Present', X: 'Absent', '-': 'Exempt' };
+
+    let h = `<div class="profile-sheet">`;
+    h += `<div class="profile-title">MEMBER PROFILE</div>`;
+    h += `<div class="profile-divider"></div>`;
+    h += `<div class="profile-name-block"><span class="profile-name-label">Name</span><div class="profile-name-value">${name}</div></div>`;
+    h += `<div class="profile-divider"></div>`;
+
+    // ── Savings ──
+    h += `<div class="profile-section-title">Savings</div>`;
+    if (savRow) {
+        months.forEach(mk => { if (Object.prototype.hasOwnProperty.call(savRow, mk)) h += profileLine(labels[mk] || mk, `KES ${savRow[mk] || 0}`); });
+        h += profileLine('Total Savings', `KES ${savRow.total || 0}`, true);
+    } else {
+        h += `<p class="profile-empty">No savings records.</p>`;
+    }
+    h += `<div class="profile-divider"></div>`;
+
+    // ── Fines ──
+    h += `<div class="profile-section-title">Fines</div>`;
+    if (fineRow) {
+        months.forEach(mk => { if (Object.prototype.hasOwnProperty.call(fineRow, mk)) h += profileLine(labels[mk] || mk, fineRow[mk] || 0); });
+        h += profileLine('Outstanding Debt', `KES ${fineRow.debt || 0}`, true);
+    } else {
+        h += `<p class="profile-empty">No fine records.</p>`;
+    }
+    h += `<div class="profile-divider"></div>`;
+
+    // ── Contributions ──
+    h += `<div class="profile-section-title">Contributions</div>`;
+    if (ctbRow) {
+        months.forEach(mk => { if (Object.prototype.hasOwnProperty.call(ctbRow, mk)) h += profileLine(labels[mk] || mk, ctbRow[mk] || '—'); });
+    } else {
+        h += `<p class="profile-empty">No contribution records.</p>`;
+    }
+    h += `<div class="profile-divider"></div>`;
+
+    // ── Attendance ──
+    h += `<div class="profile-section-title">Attendance</div>`;
+    if (attRow) {
+        months.forEach(mk => { if (Object.prototype.hasOwnProperty.call(attRow, mk)) h += profileLine(labels[mk] || mk, statusMap[attRow[mk]] || 'Exempt'); });
+    } else {
+        h += `<p class="profile-empty">No attendance records.</p>`;
+    }
+    h += `<div class="profile-divider"></div>`;
+
+    // ── Host Schedule ──
+    h += `<div class="profile-section-title">Host Schedule</div>`;
+    const hostMonths = months.filter(mk => (hostSchedule[mk] || []).some(entry => entry.toUpperCase().includes(name.toUpperCase())));
+    if (hostMonths.length) {
+        hostMonths.forEach(mk => h += profileLine(labels[mk] || mk, 'Host'));
+    } else {
+        h += `<p class="profile-empty">No hosting assignments on record.</p>`;
+    }
+
+    h += `<div class="profile-divider profile-divider-end"></div>`;
+    h += `</div>`;
+
+    box.innerHTML = h;
+}
+
+function exportProfile() {
+    const sel = document.getElementById('profileMemberSelect');
+    const name = sel ? sel.value : '';
+    if (!name) { toast('Select a member first.', 'error'); return; }
+    exportTable('profileSheet', 'Member_Profile_' + name.replace(/\s+/g, '_'));
+}
+
+// ═══════════════════════════════════════════
 //  ADD TIMELINE
 // ═══════════════════════════════════════════
 
@@ -977,6 +1137,8 @@ function populateDeleteSelect() {
 
     save('cursors', cursors);
     populateDeleteSelect();
+    const profSelAfterAdd = document.getElementById('profileMemberSelect');
+    if (profSelAfterAdd && profSelAfterAdd.value) renderMemberProfile(profSelAfterAdd.value);
 
     toast(`Timeline for ${label} created.`);
 }   // ← addTimeline ENDS HERE
@@ -1039,6 +1201,8 @@ async function deleteTimeline() {
 
     save('cursors', cursors);
     populateDeleteSelect();
+    const profSelAfterDel = document.getElementById('profileMemberSelect');
+    if (profSelAfterDel && profSelAfterDel.value) renderMemberProfile(profSelAfterDel.value);
 
     toast(`Timeline for ${labels[key] || key} deleted successfully.`, 'info');
 }
@@ -1090,6 +1254,7 @@ function addRecord(key) {
         document.getElementById('attName').value='';
         save('attendance', attendance); renderSection('attendance'); toast('Attendance saved.');
     }
+    populateMemberSelect();
 }
 function addHost() {
     const mk = months[cursors['host']];
@@ -1099,6 +1264,8 @@ function addHost() {
     hostSchedule[mk].push((hostSchedule[mk].length + 1) + '. ' + name);
     document.getElementById('hostName').value='';
     save('hosts', hostSchedule); renderSection('host'); toast('Host assignment saved.');
+    const profSelAfterHost = document.getElementById('profileMemberSelect');
+    if (profSelAfterHost && profSelAfterHost.value) renderMemberProfile(profSelAfterHost.value);
 }
 
 // ═══════════════════════════════════════════
@@ -1158,11 +1325,14 @@ async function deleteRow(key, idx) {
     if (key==='contrib') contrib.splice(idx,1), save('contrib',contrib);
     if (key==='attendance') attendance.splice(idx,1), save('attendance',attendance);
     renderSection(key); toast('Record removed.', 'info');
+    populateMemberSelect();
 }
 async function deleteHost(mk, idx) {
     const ok = await showConfirm('Remove host', 'Remove this host assignment?');
     if (!ok) return;
     hostSchedule[mk].splice(idx,1); save('hosts',hostSchedule); renderSection('host'); toast('Host removed.','info');
+    const profSelAfterHostDel = document.getElementById('profileMemberSelect');
+    if (profSelAfterHostDel && profSelAfterHostDel.value) renderMemberProfile(profSelAfterHostDel.value);
 }
 
 // ═══════════════════════════════════════════
@@ -1288,9 +1458,11 @@ window.uploadMinutes=uploadMinutes; window.deleteMinute=deleteMinute;
 window.exportTable=exportTable;
 window.closeEditModal=closeEditModal; window.commitEdit=commitEdit;
 window.confirmResolve=confirmResolve;
+window.renderMemberProfile=renderMemberProfile; window.exportProfile=exportProfile;
 
 // ── Boot ──
 initData();
 </script>
 </body>
 </html>
+
