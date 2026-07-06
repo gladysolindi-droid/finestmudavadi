@@ -305,26 +305,9 @@
             <h4>🗑 Delete Existing Month / Year</h4>
 
             <div class="admin-fields">
-                <select id="deleteMonth">
-                    <option value="jan">January</option>
-                    <option value="feb">February</option>
-                    <option value="mar">March</option>
-                    <option value="apr">April</option>
-                    <option value="may">May</option>
-                    <option value="jun">June</option>
-                    <option value="jul">July</option>
-                    <option value="aug">August</option>
-                    <option value="sep">September</option>
-                    <option value="oct">October</option>
-                    <option value="nov">November</option>
-                    <option value="dec">December</option>
+                <select id="deleteTimelineSelect" style="min-width:220px">
+                    <option value="">— No timeline frames yet —</option>
                 </select>
-
-                <input type="number"
-                       id="deleteYear"
-                       value="2026"
-                       style="width:110px"
-                       placeholder="Year">
 
                 <button class="btn btn-danger" onclick="deleteTimeline()">
                     Delete Timeline Frame
@@ -811,6 +794,7 @@ async function initData() {
     // ── Render all sections ──
     ['host','contrib','savings','fines','attendance'].forEach(renderSection);
     renderMinutes();
+    populateDeleteSelect();
 
     // ── Real-time listener: update all viewers when admin saves ──
     onSnapshot(DOCREF, (snap) => {
@@ -828,6 +812,7 @@ async function initData() {
         // Do NOT overwrite cursors from remote — each device keeps its own navigation position
         ['host','contrib','savings','fines','attendance'].forEach(renderSection);
         renderMinutes();
+        populateDeleteSelect();
     });
 }
 
@@ -909,6 +894,7 @@ function activateAdmin() {
     document.querySelectorAll('.export-btn').forEach(b => b.style.display = 'inline-block');
     ['host','contrib','savings','fines','attendance'].forEach(renderSection);
     renderMinutes();
+    populateDeleteSelect();
     toast('Administrator access granted.');
 }
 
@@ -925,6 +911,24 @@ function gotoPage(id, btn) {
 function navMonth(key, dir) {
     let n = cursors[key] + dir;
     if (n >= 0 && n < months.length) { cursors[key] = n; save('cursors', cursors); renderSection(key); }
+}
+
+// ═══════════════════════════════════════════
+//  DELETE-TIMELINE DROPDOWN
+//  Always mirrors the real `months` array so the
+//  dropdown can never point at a non-existent frame.
+// ═══════════════════════════════════════════
+function populateDeleteSelect() {
+    const sel = document.getElementById('deleteTimelineSelect');
+    if (!sel) return;
+    const prevValue = sel.value;
+    if (!months || !months.length) {
+        sel.innerHTML = `<option value="">— No timeline frames yet —</option>`;
+        return;
+    }
+    sel.innerHTML = months.map(mk => `<option value="${mk}">${labels[mk] || mk}</option>`).join('');
+    // Try to keep the previously selected frame selected, if it still exists
+    if (months.includes(prevValue)) sel.value = prevValue;
 }
 
 // ═══════════════════════════════════════════
@@ -961,6 +965,9 @@ function navMonth(key, dir) {
         save('fines', fines);
         save('contrib', contrib);
         save('savings', savings);
+    } else {
+        toast(`${label} already exists on the timeline.`, 'error');
+        return;
     }
 
     ['host','contrib','savings','fines','attendance'].forEach(k => {
@@ -969,23 +976,41 @@ function navMonth(key, dir) {
     });
 
     save('cursors', cursors);
+    populateDeleteSelect();
 
     toast(`Timeline for ${label} created.`);
 }   // ← addTimeline ENDS HERE
 
 
-function deleteTimeline() {
+// ═══════════════════════════════════════════
+//  DELETE TIMELINE
+//  Reads the actually-selected, existing month/year
+//  frame from the dynamic dropdown, confirms via the
+//  in-app modal, then purges it from every dataset.
+// ═══════════════════════════════════════════
+async function deleteTimeline() {
 
-    const key = document.getElementById("deleteTimelineSelect").value;
+    const sel = document.getElementById('deleteTimelineSelect');
+    const key = sel ? sel.value : '';
 
     if (!key) {
-        toast("Please select a timeline.", "error");
+        toast('Please select a timeline to delete.', 'error');
         return;
     }
 
-    if (!confirm("Delete " + labels[key] + "?")) {
+    if (!months.includes(key)) {
+        toast('That timeline no longer exists.', 'error');
+        populateDeleteSelect();
         return;
     }
+
+    if (months.length <= 1) {
+        toast('At least one timeline frame must remain.', 'error');
+        return;
+    }
+
+    const ok = await showConfirm('Delete timeline frame', `This will permanently delete all savings, fines, contributions, attendance, and host records for "${labels[key] || key}". Continue?`);
+    if (!ok) return;
 
     months = months.filter(m => m !== key);
 
@@ -997,24 +1022,25 @@ function deleteTimeline() {
     contrib.forEach(r => delete r[key]);
     savings.forEach(r => delete r[key]);
 
-    save("months", months);
-    save("labels", labels);
-    save("hosts", hostSchedule);
-    save("attendance", attendance);
-    save("fines", fines);
-    save("contrib", contrib);
-    save("savings", savings);
+    save('months', months);
+    save('labels', labels);
+    save('hosts', hostSchedule);
+    save('attendance', attendance);
+    save('fines', fines);
+    save('contrib', contrib);
+    save('savings', savings);
 
-    refreshDeleteList();
-
+    // Clamp every section's cursor so it still points at a valid month
     ['host','contrib','savings','fines','attendance'].forEach(k => {
-        cursors[k] = Math.max(0, months.length - 1);
+        cursors[k] = Math.min(cursors[k], months.length - 1);
+        if (cursors[k] < 0) cursors[k] = 0;
         renderSection(k);
     });
 
-    save("cursors", cursors);
+    save('cursors', cursors);
+    populateDeleteSelect();
 
-    toast("Timeline deleted successfully.");
+    toast(`Timeline for ${labels[key] || key} deleted successfully.`, 'info');
 }
 
 // ═══════════════════════════════════════════
@@ -1122,7 +1148,7 @@ function editAttendance(idx) {
 }
 
 // ═══════════════════════════════════════════
-//  DELETE
+//  DELETE (row-level)
 // ═══════════════════════════════════════════
 async function deleteRow(key, idx) {
     const ok = await showConfirm('Remove record', 'This will permanently delete this member row. Continue?');
@@ -1253,7 +1279,8 @@ function exportTable(elId, name) {
 // ── Expose non-module functions to global scope (onclick= attributes) ──
 window.doLogin=doLogin; window.doPage2Login=doPage2Login;
 window.gotoPage=gotoPage; window.navMonth=navMonth;
-window.addTimeline=addTimeline; window.addRecord=addRecord; window.addHost=addHost;
+window.addTimeline=addTimeline; window.deleteTimeline=deleteTimeline;
+window.addRecord=addRecord; window.addHost=addHost;
 window.editSavings=editSavings; window.editFines=editFines;
 window.editContrib=editContrib; window.editAttendance=editAttendance;
 window.deleteRow=deleteRow; window.deleteHost=deleteHost;
